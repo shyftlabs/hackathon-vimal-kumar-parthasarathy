@@ -10,6 +10,9 @@
 
 </div>
 
+> ### 🔗 Live demo — **[fleetshield-ai.vercel.app](https://fleetshield-ai.vercel.app)**
+> **Operator portal** (`/operator`) is open, no login. **Driver portal** (`/driver-portal`) logs in with **Employee # `405` · PIN `7234`** (Marcus Rivera).
+
 ---
 
 ## The Problem
@@ -124,7 +127,23 @@ cp .env.example .env   # then add ANTHROPIC_API_KEY (+ SMALLEST/TWILIO if using 
 ./scripts/dev.sh
 ```
 
-Open **http://localhost:3001** → `/operator` (manager) · `/driver-portal` (driver login `405` / `7234` = Marcus Rivera).
+Open **http://localhost:3001** (or the **[live demo](https://fleetshield-ai.vercel.app)**):
+
+| Surface | Path | Login |
+|---|---|---|
+| Operator dashboard | `/operator` | — *(no login)* |
+| Tasha assistant | `/operator/assistant` | — *(no login)* |
+| Driver portal | `/driver-portal` | **Employee # `405` · PIN `7234`** → Marcus Rivera |
+
+**Driver Portal credentials — Employee Number `405`, PIN `7234`** (Marcus Rivera, the fleet's highest-risk driver — the richest portal data for a demo). All 30 seeded drivers have unique credentials; a few others to try different profiles:
+
+| Employee # | PIN | Driver |
+|---|---|---|
+| **`405`** | **`7234`** | **Marcus Rivera** — *recommended demo login* |
+| `241` | `1847` | James Wilson |
+| `318` | `2956` | Sarah Chen |
+| `127` | `4081` | Emily Davis |
+| `562` | `3619` | Robert Kim |
 
 To enable the real dispatch call: `ngrok http 3000`, set `PUBLIC_BASE_URL` in `.env`, restart, then tap "Call Dispatch."
 
