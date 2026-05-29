@@ -74,7 +74,7 @@ FleetShield is a **product built on Continuum**, not a framework wrapper:
 | Dispatcher conversation | a second Continuum LLM persona driving a live phone call |
 | Model routing | provider-prefix routing (Claude Sonnet 4.5) with graceful fallback |
 
-> Observability (Langfuse) and long-term memory (mem0) are native Continuum features wired one-flag-away — see `CLAUDE.md` → *Continuum upgrades*.
+> **📘 Full, file-referenced breakdown of every Continuum primitive we use → [CONTINUUM.md](CONTINUUM.md).** Observability (Langfuse) and long-term memory (mem0) are native Continuum features wired one-flag-away.
 
 ## Architecture
 
@@ -170,9 +170,10 @@ scripts/dev.sh  one-command local startup
 
 | Doc | What |
 |---|---|
+| **[CONTINUUM.md](CONTINUUM.md)** | **Exactly which Continuum primitives we use, where, and why (file-referenced)** |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Technical deep-dive + request flows |
 | [COMPETITION.md](COMPETITION.md) | Hackathon rules, judging, our pitch, why we win |
 | [DEMO_SCRIPT.md](DEMO_SCRIPT.md) | The 3-minute live demo script |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Technical deep-dive |
 | [SECURITY.md](SECURITY.md) | Security posture + production roadmap |
 | [CLAUDE.md](CLAUDE.md) | Engineering guide + gotchas for contributors/agents |
 
