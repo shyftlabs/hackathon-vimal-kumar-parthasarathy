@@ -13,8 +13,10 @@ Protocol (matches frontend/src/lib/voice-client.ts):
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import json
+import os
 import uuid
 
 from starlette.websockets import WebSocketDisconnect
@@ -37,8 +39,13 @@ async def handle_voice_ws(ws) -> None:
     driver_id: str | None = None
     conversation_id = f"voice-{uuid.uuid4().hex[:12]}"  # one voice session = one conversation
 
+    send_lock = asyncio.Lock()
+
     async def send(obj: dict) -> None:
-        await ws.send_text(json.dumps(obj))
+        # Serialize sends so the background dispatch-relay task can't interleave frames
+        # with the main loop's sends.
+        async with send_lock:
+            await ws.send_text(json.dumps(obj))
 
     await send({"type": "state_change", "state": "listening"})
 
@@ -142,6 +149,10 @@ async def handle_voice_ws(ws) -> None:
                     if res.get("state") == "error":
                         await send({"type": "dispatch_call_ended",
                                     "reason": res.get("message", "error"), "callId": res.get("callId")})
+                    elif res.get("callId"):
+                        # Watch the call in the background; when it ends, relay dispatch's
+                        # answer back to the driver (spoken + transcript) on this same WS.
+                        asyncio.create_task(_relay_dispatch_outcome(send, res["callId"]))
 
                 await send({"type": "state_change", "state": "listening"})
 
@@ -167,3 +178,69 @@ async def handle_voice_ws(ws) -> None:
     finally:
         if stt is not None:
             await stt.close()
+
+
+async def _relay_dispatch_outcome(send, call_id: str, timeout_s: int = 150) -> None:
+    """Poll the dispatch call until it ends, then have Tasha speak the outcome to the driver
+    over the same voice WS (so 'call dispatch' isn't a dead end — the driver hears the reply)."""
+    from backend.voice import twilio_dispatch
+    try:
+        waited = 0
+        while waited < timeout_s:
+            await asyncio.sleep(3)
+            waited += 3
+            call = twilio_dispatch.get_call(call_id)
+            if not call:
+                return
+            if call.get("ended") or call.get("state") in ("complete", "error"):
+                break
+
+        call = twilio_dispatch.get_call(call_id) or {}
+        dispatcher_said = " ".join(
+            t.get("text", "") for t in call.get("transcript", []) if t.get("role") == "dispatcher"
+        ).strip()
+        if call.get("state") == "error":
+            relay = ("I couldn't get through to dispatch just now — I'll keep trying. "
+                     "Stay safe and keep your hazards on.")
+        elif not dispatcher_said:
+            relay = ("I reached dispatch and passed along your update — they're aware and "
+                     "will follow up. Sit tight.")
+        else:
+            relay = await _generate_relay(call, dispatcher_said)
+
+        await send({"type": "state_change", "state": "speaking"})
+        await send({"type": "transcript", "role": "assistant", "text": relay})
+        try:
+            pcm = await synthesize_pcm(relay)
+            await send({"type": "audio_chunk", "audio": base64.b64encode(wav_wrap(pcm)).decode()})
+        except Exception as e:  # noqa: BLE001
+            logger.warning(f"[voice] relay TTS failed: {e}")
+        await send({"type": "state_change", "state": "listening"})
+        logger.info(f"[voice] dispatch outcome relayed to driver: {relay[:80]!r}")
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"[voice] dispatch relay failed: {e}")
+
+
+async def _generate_relay(call: dict, dispatcher_said: str) -> str:
+    """Tasha turns the dispatcher's reply into a short, warm spoken update for the driver."""
+    convo = "\n".join(f"{t.get('role')}: {t.get('text')}" for t in call.get("transcript", []))
+    model = os.environ.get("DEFAULT_LLM_MODEL", "claude-sonnet-4-5")
+    messages = [
+        {"role": "system", "content": (
+            "You are Tasha, a truck driver's AI companion. You just called the human dispatcher on the "
+            "driver's behalf. In ONE or TWO warm, natural spoken sentences, relay the OUTCOME to the driver — "
+            "what dispatch decided or will do, plus any timing. Speak directly to the driver. No markdown.")},
+        {"role": "user", "content": (
+            f"Original request to dispatch: {call.get('intent')!r}\n\nCall transcript:\n{convo}\n\n"
+            "Relay dispatch's answer to the driver now.")},
+    ]
+    try:
+        from orchestrator.core.container import get_container
+        from orchestrator.llm.config import LLMConfig
+        llm = get_container().llm_client
+        resp = await llm.chat(messages=messages, config=LLMConfig(model=model, max_tokens=120), auto_session=False)
+        out = (resp.content or "").strip() if resp else ""
+        return out or f"Good news — I spoke with dispatch. They said: {dispatcher_said}"
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"[voice] relay LLM failed: {e}")
+        return f"I spoke with dispatch. They said: {dispatcher_said}"
