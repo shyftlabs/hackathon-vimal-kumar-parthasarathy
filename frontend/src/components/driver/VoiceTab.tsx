@@ -8,6 +8,7 @@ import type { VoiceState } from '@/lib/voice-client';
 interface VoiceTabProps {
   voiceState: VoiceState;
   transcripts: { role: 'user' | 'assistant'; text: string }[];
+  livePartial?: string;
   chatInput: string;
   chatStreaming: boolean;
   isMuted: boolean;
@@ -27,14 +28,14 @@ const quickActions = [
 ];
 
 export function VoiceTab({
-  voiceState, transcripts, chatInput, chatStreaming, isMuted,
+  voiceState, transcripts, livePartial, chatInput, chatStreaming, isMuted,
   onChatInputChange, onSendChat, onToggleVoice, onToggleMute,
 }: VoiceTabProps) {
   const transcriptsEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     transcriptsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [transcripts]);
+  }, [transcripts, livePartial]);
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
@@ -118,7 +119,7 @@ export function VoiceTab({
 
       {/* Scrollable transcript */}
       <div className="flex-1 overflow-y-auto px-4 pb-2 space-y-2 min-h-0">
-        {transcripts.length === 0 && voiceState !== 'disconnected' && (
+        {transcripts.length === 0 && !livePartial && voiceState !== 'disconnected' && (
           <div className="text-center py-4 text-gray-600 text-sm">Listening... say something to Tasha</div>
         )}
         {transcripts.length === 0 && voiceState === 'disconnected' && (
@@ -135,6 +136,13 @@ export function VoiceTab({
             </div>
           </div>
         ))}
+        {livePartial && (
+          <div className="flex justify-end">
+            <div className="max-w-[85%] px-3.5 py-2.5 rounded-2xl rounded-br-sm text-sm leading-relaxed bg-[#FBAF1A]/40 text-[#18202F] italic">
+              {livePartial}<span className="animate-pulse">…</span>
+            </div>
+          </div>
+        )}
         <div ref={transcriptsEndRef} />
       </div>
 

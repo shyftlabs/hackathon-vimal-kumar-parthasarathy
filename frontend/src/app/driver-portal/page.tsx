@@ -47,6 +47,7 @@ export default function DriverPortalPage() {
   // ─── Voice State ──────────────────────────────────
   const [voiceState, setVoiceState] = useState<VoiceState>('disconnected');
   const [transcripts, setTranscripts] = useState<{ role: 'user' | 'assistant'; text: string }[]>([]);
+  const [livePartial, setLivePartial] = useState('');
   const voiceClientRef = useRef<VoiceClient | null>(null);
   const [chatInput, setChatInput] = useState('');
   const [chatStreaming, setChatStreaming] = useState(false);
@@ -109,6 +110,7 @@ export default function DriverPortalPage() {
     }
     setSession(null);
     setTranscripts([]);
+    setLivePartial('');
     setVoiceState('disconnected');
     setEmployeeNumber('');
     setPinInput('');
@@ -172,8 +174,9 @@ export default function DriverPortalPage() {
     }
 
     const client = new VoiceClient({
-      onStateChange: setVoiceState,
+      onStateChange: (s) => { setVoiceState(s); if (s === 'thinking' || s === 'disconnected') setLivePartial(''); },
       onTranscript: (role, text) => {
+        if (role === 'user') setLivePartial('');
         setTranscripts((prev) => {
           const last = prev[prev.length - 1];
           if (last && last.role === role) {
@@ -182,6 +185,7 @@ export default function DriverPortalPage() {
           return [...prev, { role, text }];
         });
       },
+      onPartialTranscript: (text) => setLivePartial(text),
       onError: () => {},
       onDispatchProgress: (event: DispatchProgressEvent) => {
         if (event.type === 'dispatch_status' && event.phase) {
@@ -479,6 +483,7 @@ export default function DriverPortalPage() {
           <VoiceTab
             voiceState={voiceState}
             transcripts={transcripts}
+            livePartial={livePartial}
             chatInput={chatInput}
             chatStreaming={chatStreaming}
             isMuted={isMuted}

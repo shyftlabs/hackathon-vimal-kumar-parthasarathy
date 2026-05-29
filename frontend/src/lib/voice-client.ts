@@ -23,6 +23,7 @@ export interface DispatchProgressEvent {
 export interface VoiceCallbacks {
   onStateChange: (state: VoiceState) => void;
   onTranscript: (role: 'user' | 'assistant', text: string) => void;
+  onPartialTranscript?: (text: string) => void;
   onToolResult?: (toolName: string, result: any) => void;
   onError: (error: string) => void;
   onPlaybackComplete?: () => void;
@@ -241,6 +242,9 @@ export class VoiceClient {
         } else if (msg.role === 'user') {
           this.consecutiveEmptyTranscripts = 0;
         }
+        break;
+      case 'partial_transcript':
+        this.callbacks.onPartialTranscript?.(msg.text);
         break;
       case 'tool_result':
         this.callbacks.onToolResult?.(msg.toolName, msg.result);

@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import array
 import asyncio
 import json
+import math
 import os
 
 import websockets
@@ -18,6 +20,12 @@ class PulseSTT:
     used per utterance (matching the reference implementation).
     """
 
+    # Auto-gain (matches the reference TS pipeline): boost quiet audio so Pulse can
+    # transcribe even when the browser's echo cancellation suppresses the mic after TTS.
+    _TARGET_RMS = 0.08
+    _MAX_GAIN = 8.0
+    _GAIN_SMOOTHING = 0.15
+
     def __init__(self) -> None:
         self._key = os.environ.get("SMALLEST_API_KEY")
         self._ws = None
@@ -26,6 +34,8 @@ class PulseSTT:
         self._interim = ""
         self._got_response = False
         self._got_last = False
+        self._last_emitted = ""
+        self._gain = 1.0
 
     async def connect(self) -> None:
         if not self._key:
@@ -61,9 +71,49 @@ class PulseSTT:
     async def send_audio(self, pcm: bytes) -> None:
         if self._ws is not None:
             try:
-                await self._ws.send(pcm)
+                await self._ws.send(self._apply_gain(pcm))
             except Exception:
                 pass
+
+    def take_interim(self) -> str | None:
+        """Best partial so far (accumulated final + latest interim), returned only when it
+        changes — lets the session stream a live transcript to the client as the user speaks."""
+        display = self._final
+        if self._interim:
+            display = (display + " " + self._interim).strip() if display else self._interim
+        display = display.strip()
+        if display and display != self._last_emitted:
+            self._last_emitted = display
+            return display
+        return None
+
+    def _apply_gain(self, pcm: bytes) -> bytes:
+        """Adaptive gain toward TARGET_RMS, capped at MAX_GAIN. Returns the original bytes
+        on any error so a gain bug can never break transcription."""
+        try:
+            samples = array.array("h")
+            samples.frombytes(pcm)
+            n = len(samples)
+            if n == 0:
+                return pcm
+            acc = 0.0
+            for v in samples:
+                x = v / 32768.0
+                acc += x * x
+            raw = math.sqrt(acc / n)
+            if raw > 0.001:
+                ideal = min(self._TARGET_RMS / raw, self._MAX_GAIN)
+                self._gain = self._gain * (1 - self._GAIN_SMOOTHING) + ideal * self._GAIN_SMOOTHING
+            if self._gain < 1.2:
+                return pcm
+            g = self._gain
+            out = array.array("h", samples)
+            for i in range(n):
+                amp = int(samples[i] * g)
+                out[i] = 32767 if amp > 32767 else -32768 if amp < -32768 else amp
+            return out.tobytes()
+        except Exception:
+            return pcm
 
     async def end_utterance(self) -> str:
         if self._ws is not None:

@@ -48,10 +48,14 @@ async def handle_voice_ws(ws) -> None:
             if msg.get("type") == "websocket.disconnect":
                 break
 
-            # Binary audio frame -> stream to STT
+            # Binary audio frame -> stream to STT, and forward any live partial transcript
             if msg.get("bytes") is not None:
                 if stt is not None:
                     await stt.send_audio(msg["bytes"])
+                    partial = stt.take_interim()
+                    if partial:
+                        logger.debug(f"[voice] partial: {partial[:60]!r}")
+                        await send({"type": "partial_transcript", "role": "user", "text": partial})
                 continue
 
             text = msg.get("text")
@@ -65,11 +69,13 @@ async def handle_voice_ws(ws) -> None:
 
             if t == "start_session":
                 driver_id = data.get("driverId")
+                logger.info(f"[voice] start_session driverId={driver_id} conv={conversation_id}")
             elif t == "speech_start":
                 if stt is None:
                     stt = PulseSTT()
                     try:
                         await stt.connect()
+                        logger.info("[voice] speech_start — Pulse STT connected")
                     except Exception as e:  # noqa: BLE001
                         logger.warning(f"STT connect failed: {e}")
                         stt = None
@@ -83,6 +89,7 @@ async def handle_voice_ws(ws) -> None:
                     logger.warning(f"STT end failed: {e}")
                     transcript = ""
                 stt = None
+                logger.info(f"[voice] speech_end — final transcript: {transcript!r}")
                 await send({"type": "transcript", "role": "user", "text": transcript})
                 if not transcript.strip():
                     await send({"type": "state_change", "state": "listening"})

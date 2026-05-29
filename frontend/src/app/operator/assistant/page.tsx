@@ -397,6 +397,10 @@ function AssistantPageInner() {
           }
         }
       },
+      onPartialTranscript: (text) => {
+        if (!voiceModeRef.current) return;
+        setVoiceTranscript(text);
+      },
       onToolResult: (toolName, result) => {
         if (!voiceModeRef.current || !currentAssistantId) return;
         // Handle deployMission as a mission tracker
