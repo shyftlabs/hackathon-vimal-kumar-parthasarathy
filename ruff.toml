@@ -1,0 +1,17 @@
+# Ruff config for the FleetShield AI backend — high-signal (bug-catching) rules.
+target-version = "py313"
+line-length = 120
+extend-exclude = ["continuum-src", "existing-solution", ".venv", "frontend"]
+
+[lint]
+# F = pyflakes (unused/undefined), E/W = pycodestyle errors, B = bugbear (real bugs).
+# Import-order (I) and line-length (E501) are intentionally NOT enforced: reordering
+# imports would break the deliberate `load_dotenv()`-before-`orchestrator` ordering,
+# and several descriptive strings/dicts are intentionally long.
+select = ["F", "E", "W", "B"]
+ignore = [
+    "E402",  # deliberate: load .env before importing orchestrator; routers at file end
+    "E741",  # short single-letter loop/inline names (i, e, d, t, k, v) in numeric code
+    "E501",  # long descriptive strings/dicts are intentional and readable
+    "B008",  # FastAPI uses callables (Query/Depends) in argument defaults by design
+]

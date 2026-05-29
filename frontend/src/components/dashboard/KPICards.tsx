@@ -1,0 +1,101 @@
+'use client';
+
+import { Truck, Users, AlertTriangle, Shield } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { InsightTooltip } from '@/components/ui/InsightTooltip';
+import type { FleetOverview, InsuranceScore } from '@/types/fleet';
+
+interface KPICardsProps {
+  overview: FleetOverview;
+  score: InsuranceScore;
+}
+
+export default function KPICards({ overview, score }: KPICardsProps) {
+  const cards = [
+    {
+      label: 'Active Vehicles',
+      value: overview.totalVehicles,
+      sub: `${overview.activeVehicles} active today`,
+      icon: Truck,
+      iconBg: 'bg-[#FFF8EB]',
+      iconColor: 'text-[#BF7408]',
+      trend: null,
+      tooltipKey: 'dashboard.activeTrucks',
+    },
+    {
+      label: 'Active Drivers',
+      value: overview.totalDrivers,
+      sub: `${overview.activeDrivers} on route`,
+      icon: Users,
+      iconBg: 'bg-[#FFF8EB]',
+      iconColor: 'text-[#BF7408]',
+      trend: null,
+      tooltipKey: 'dashboard.activeDrivers',
+    },
+    {
+      label: 'Safety Events',
+      value: overview.totalSafetyEvents,
+      sub: `${(overview.eventsPerThousandMiles ?? (overview.eventsPerMile * 1000)).toFixed(1)}/1K mi · 30 days`,
+      icon: AlertTriangle,
+      iconBg: 'bg-amber-50',
+      iconColor: 'text-amber-500',
+      trend: { direction: 'down' as const, label: score.trend === 'improving' ? '↓ Improving' : score.trend === 'declining' ? '↑ Worsening' : '→ Stable' },
+      tooltipKey: 'dashboard.safetyEvents',
+    },
+    {
+      label: 'Fleet Score',
+      value: score.overallScore,
+      sub: `Grade ${score.grade} · Top ${100 - score.percentile}%`,
+      icon: Shield,
+      iconBg: 'bg-emerald-50',
+      iconColor: 'text-emerald-600',
+      trend: { direction: score.trend === 'improving' ? 'up' as const : score.trend === 'declining' ? 'down' as const : 'neutral' as const, label: score.trend },
+      highlight: true,
+      tooltipKey: 'dashboard.fleetScore',
+    },
+  ];
+
+  return (
+    <div className="grid grid-cols-4 gap-5">
+      {cards.map((card, i) => {
+        const Icon = card.icon;
+        return (
+          <motion.div
+            key={card.label}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.07, duration: 0.4, ease: [0.22, 0.61, 0.36, 1] }}
+            className={`bg-white rounded-2xl border px-5 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] hover:border-gray-300 transition-all duration-200 ${
+              card.highlight ? 'border-emerald-200 bg-gradient-to-br from-emerald-50/40 to-white' : 'border-[#E5E2DC]'
+            }`}
+          >
+            <div className="flex justify-between items-start mb-2">
+              <span className="flex items-center gap-1 text-[11px] font-semibold text-gray-400 uppercase tracking-[0.5px]">
+                {card.label}
+                <InsightTooltip metricKey={card.tooltipKey} />
+              </span>
+              <div className={`w-9 h-9 rounded-xl ${card.iconBg} flex items-center justify-center`}>
+                <Icon className={`w-[18px] h-[18px] ${card.iconColor}`} />
+              </div>
+            </div>
+            <div className="text-[36px] font-mono-kpi font-extrabold tracking-tight leading-none mb-1.5">
+              {card.value.toLocaleString()}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[12px] text-gray-400">{card.sub}</span>
+              {card.trend && (
+                <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded ${
+                  card.trend.direction === 'up' ? 'bg-emerald-50 text-emerald-700' :
+                  card.trend.direction === 'down' ? 'bg-red-50 text-red-600' :
+                  'bg-gray-100 text-gray-500'
+                }`}>
+                  {card.trend.label}
+                </span>
+              )}
+            </div>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
