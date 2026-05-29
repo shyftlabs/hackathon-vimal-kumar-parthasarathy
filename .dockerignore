@@ -1,0 +1,20 @@
+# Keep the build context small + never bake secrets or vendored repos into the image.
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.git/
+.gitignore
+
+# Continuum is installed from its public repo in the Dockerfile, not copied.
+continuum-src/
+# TS reference repo — not needed at runtime.
+existing-solution/
+# Frontend deploys separately on Vercel.
+frontend/
+# Docs / scripts not needed in the image.
+*.md
