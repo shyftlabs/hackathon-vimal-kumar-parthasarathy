@@ -189,6 +189,15 @@ async def _relay_dispatch_outcome(send, call_id: str, timeout_s: int = 150) -> N
         while waited < timeout_s:
             await asyncio.sleep(3)
             waited += 3
+            # Keepalive: the dispatch call runs ~45-60s with no other WS traffic. Without a
+            # heartbeat, idle-timeout proxies close the voice WS and the relay can't be
+            # delivered (the exact failure we hit). A benign {ping} the client ignores keeps
+            # the socket alive; if the send fails, the WS is gone and we stop.
+            try:
+                await send({"type": "ping"})
+            except Exception:
+                logger.info("[voice] relay: voice WS already closed; cannot deliver dispatch outcome")
+                return
             call = twilio_dispatch.get_call(call_id)
             if not call:
                 return
