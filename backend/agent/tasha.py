@@ -246,7 +246,7 @@ class TashaAgent:
             while emitted < len(executor.captures):
                 tname, structured = executor.captures[emitted]
                 emitted += 1
-                if structured is not None:
+                if structured is not None and tname != "callDispatch":
                     lines.append(_sse({"type": "tool_result", "toolName": tname, "result": structured}))
             return lines
 
@@ -332,14 +332,19 @@ class TashaAgent:
             content = resp.content or ""
             m = re.search(r"<voice>(.*?)</voice>", content, flags=re.S)
             spoken = m.group(1).strip() if m else re.sub(r"<voice>.*?</voice>\s*", "", content, flags=re.S).strip()
-            tools = [(n, s) for (n, s) in executor.captures if s is not None and n != "deployMission"]
+            tools = [(n, s) for (n, s) in executor.captures if s is not None and n not in ("deployMission", "callDispatch")]
             deploy = next(
                 (s for (n, s) in executor.captures
                  if n == "deployMission" and isinstance(s, dict)
                  and s.get("missionId") and not s.get("error")),
                 None,
             )
-            return {"spoken": spoken or "Here's what I found.", "tools": tools, "deploy": deploy}
+            dispatch = next(
+                (s for (n, s) in executor.captures
+                 if n == "callDispatch" and isinstance(s, dict) and s.get("action") == "dispatch_call"),
+                None,
+            )
+            return {"spoken": spoken or "Here's what I found.", "tools": tools, "deploy": deploy, "dispatch": dispatch}
         finally:
             try:
                 await mcp.cleanup()

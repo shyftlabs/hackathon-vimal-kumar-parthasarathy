@@ -215,6 +215,16 @@ def deploy_mission(mission_type: str, driver_name: str = "") -> dict:
     }
 
 
+@mcp.tool(name="callDispatch",
+          description="Place a REAL outbound phone call to the human dispatcher ON BEHALF OF the driver. "
+                      "Use this whenever a driver asks you to call / contact / notify / reach / let dispatch know "
+                      "(e.g. stuck, breakdown, accident, running late, load or route problem). Pass a concise "
+                      "'intent' describing exactly what to tell dispatch, including the situation and location. "
+                      "Do NOT merely say you'll notify dispatch — you MUST call this tool to actually place the call.")
+def call_dispatch(intent: str = "") -> dict:
+    return {"action": "dispatch_call", "intent": (intent or "a load update").strip(), "status": "placing"}
+
+
 # ─── coaching / comparison logic (ported from the original tools) ──
 
 _BENCHMARKS = {

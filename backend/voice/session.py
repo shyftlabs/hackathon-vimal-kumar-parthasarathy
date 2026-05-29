@@ -131,6 +131,18 @@ async def handle_voice_ws(ws) -> None:
                     async for ev in mission_runner.run_mission(deploy["missionId"], deploy["type"], params):
                         await send(ev)
 
+                # If Tasha decided to contact dispatch this turn, place the REAL call now.
+                dispatch = result.get("dispatch")
+                if dispatch:
+                    from backend.voice import twilio_dispatch
+                    logger.info(f"[voice] callDispatch -> placing call: {dispatch.get('intent')!r}")
+                    res = twilio_dispatch.start_call(driver_id or "d1", dispatch.get("intent") or "a load update")
+                    await send({"type": "dispatch_call_state", "callState": res.get("state"),
+                                "phase": "connecting", "callId": res.get("callId")})
+                    if res.get("state") == "error":
+                        await send({"type": "dispatch_call_ended",
+                                    "reason": res.get("message", "error"), "callId": res.get("callId")})
+
                 await send({"type": "state_change", "state": "listening"})
 
             elif t == "dispatch_call_start":
