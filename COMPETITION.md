@@ -76,7 +76,7 @@ FleetShield AI turns telematics into three things managers need:
 | Drivers coached by AI, not surveilled | **30** |
 
 ## Why We Win on Continuum
-- **Tasha = a Continuum `BaseAgent`** with 14 MCP tools, streaming rich cards + a spoken summary.
+- **Tasha = a Continuum `BaseAgent`** with 15 MCP tools, streaming rich cards + a spoken summary.
 - **Autonomous missions = Continuum-orchestrated**, multi-step, deployed by the agent and streamed live.
 - **Real outbound Twilio call** driven by a Continuum dispatcher agent — the showstopper.
 - Built-in **multi-LLM routing, memory, and Langfuse observability** demonstrate the platform's depth.

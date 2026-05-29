@@ -62,7 +62,7 @@
 
 > "Fair question — and the dashboards honestly *aren't* the AI, they're analytics. The AI is three things sitting on top of them, and all three are genuine Continuum agents:
 >
-> **One — Tasha.** When I asked who's riskiest, nothing was hardcoded. Tasha's a Continuum agent that *chose* which of fourteen tools to call, ran them, and composed the answer. Ask her something else, she picks different tools. That's autonomous reasoning, not a button.
+> **One — Tasha.** When I asked who's riskiest, nothing was hardcoded. Tasha's a Continuum agent that *chose* which of fifteen tools to call, ran them, and composed the answer. Ask her something else, she picks different tools. That's autonomous reasoning, not a button.
 >
 > **Two — the mission agents.** That coaching mission ran a multi-step pipeline on its own — scan the fleet, build per-driver plans, write the report, push tasks to phones. Nobody scripted those steps for this run.
 >
@@ -81,6 +81,6 @@
 - **Mission slow:** keep narrating the live progress; it's the "watch the agent work" moment — slowness reads as depth.
 
 ## One-liners to have ready
-- "Why Continuum?" → "The agent, the fourteen tools, the multi-step missions, multi-model routing, and observability are all Continuum primitives — we didn't build an agent framework, we built a product on one."
+- "Why Continuum?" → "The agent, the fifteen tools, the multi-step missions, multi-model routing, and observability are all Continuum primitives — we didn't build an agent framework, we built a product on one."
 - "Is the data real?" → "It's a realistic mock fleet — 25 vehicles, 30 drivers, 90 days of telematics, deterministic (fixed seed) — so the demo is reproducible and the numbers match the screen."
 - "What's next?" → "Plug into a real telematics feed; the scoring engines and agents stay identical."

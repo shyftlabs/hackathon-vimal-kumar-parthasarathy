@@ -13,7 +13,7 @@ imported as the `orchestrator` package.)
 | `AgentRunner` — `run_stream()` / `run()` | `backend/agent/tasha.py` | Streaming chat (SSE) + non-stream turns (voice, summaries) |
 | `AgentConfig`, `RunnerConfig` | `backend/agent/tasha.py` | Turn limits, session logging, no-persist runner |
 | `AgentMemoryConfig`, `AgentMemoryScope` | `backend/agent/tasha.py` | Per-user memory config (one-flag-ready) |
-| **FastMCP** (`@mcp.tool`) | `backend/mcp_server/fleet_tools.py` | The **14 fleet tools** the agent calls |
+| **FastMCP** (`@mcp.tool`) | `backend/mcp_server/fleet_tools.py` | The **15 fleet tools** the agent calls |
 | `MCPServerStreamableHttp` | `backend/agent/tasha.py` | Agent ↔ MCP tool-server connection |
 | `ToolExecutor` (subclassed) | `backend/agent/tasha.py` | Tool execution + capturing structured results for rich cards |
 | `EventType` streaming | `backend/agent/tasha.py` | `CONTENT_DELTA` / `TOOL_CALL_*` / `RUN_END` → our SSE contract |
@@ -57,7 +57,7 @@ runner.register_agent(agent)
 
 ## 2. Tools — FastMCP + `MCPServerStreamableHttp` + `ToolExecutor`
 
-The 14 fleet tools live in **one FastMCP server** (`backend/mcp_server/fleet_tools.py`):
+The 15 fleet tools live in **one FastMCP server** (`backend/mcp_server/fleet_tools.py`):
 
 ```python
 from mcp.server.fastmcp import FastMCP

@@ -9,7 +9,7 @@ Three processes (one command: `./scripts/dev.sh`):
 
 | Process | Port | Role |
 |---|---|---|
-| Fleet MCP server (FastMCP) | 8765 | Exposes the 14 fleet tools the agent calls |
+| Fleet MCP server (FastMCP) | 8765 | Exposes the 15 fleet tools the agent calls |
 | FastAPI backend (+ Tasha) | 3000 | REST data API, the Continuum agent, missions, voice, telephony |
 | Next.js frontend | 3001 | Operator + driver portals (proxies `/api` → :3000) |
 
@@ -34,7 +34,7 @@ Design rule: invalid input returns `None` (never raises); signatures are stable 
 
 ## 4. Tools (`backend/mcp_server/fleet_tools.py`)
 
-A single **FastMCP** server exposes 14 tools (`@mcp.tool`). Tool **names are camelCase and chosen to match the frontend's `ComponentRenderer`** (`getFleetOverview`, `getDriverRiskScore`, `getFleetInsuranceScore`, `getDriverWellness`, `getFinancialImpact`, `getFleetForecast`, `getAlertBriefing`, `getCoachingRecommendations`, `getPreShiftRisk`, `getFleetComparison`, `getGreenFleetMetrics`, `getFleetTrends`, `getSafetyEvents`, `deployMission`) — so each tool result renders as its rich card with zero frontend changes.
+A single **FastMCP** server exposes 15 tools (`@mcp.tool`). Tool **names are camelCase and chosen to match the frontend's `ComponentRenderer`** (`getFleetOverview`, `getDriverRiskScore`, `getFleetInsuranceScore`, `getDriverWellness`, `getFinancialImpact`, `getFleetForecast`, `getAlertBriefing`, `getCoachingRecommendations`, `getPreShiftRisk`, `getFleetComparison`, `getGreenFleetMetrics`, `getFleetTrends`, `getSafetyEvents`, `deployMission`, `callDispatch`) — so each tool result renders as its rich card with zero frontend changes.
 
 The server runs standalone (`python -m backend.mcp_server.fleet_tools`); the agent connects over `MCPServerStreamableHttp`.
 

@@ -21,7 +21,7 @@ roadmap to full production hardening.
 ## Input handling & injection
 - **No SQL** (data is in-memory, deterministic mock) → no SQL injection surface.
 - **No shell/`os.system`/`eval`** on user input → no command injection.
-- **Tool calls are read-only analytics.** The agent's 14 tools only *read* fleet data and compute scores; `deployMission` only launches read-only analysis. There are no destructive or state-mutating tools, so the **prompt-injection blast radius is limited to read-only fleet insights** — an attacker cannot exfiltrate external data, mutate records, or run code.
+- **Tools are read-only analytics, with two bounded exceptions.** 13 of the agent's 15 tools only *read* fleet data and compute scores; `deployMission` only launches read-only analysis. The sole side-effecting tool is `callDispatch`, which places an outbound call **only to the pre-configured `DISPATCHER_NUMBER`** (never an attacker-supplied number) with bounded turns — so even a successful prompt injection cannot exfiltrate data, mutate records, run code, or dial an arbitrary destination. The **blast radius is limited to read-only fleet insights plus a call to the one trusted dispatcher line.**
 - **TTS input is capped** (`_MAX_TTS_CHARS`) to bound abuse/cost; mission turns are bounded (`MAX_TURNS`); the agent has `max_turns` limits.
 - Route inputs are validated (unknown driver/mission ids → `404`; bad driver PIN → `401`).
 

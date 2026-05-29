@@ -32,7 +32,7 @@ FastAPI backend (Python 3.13)                                        :3000
    ├─ Voice  = Smallest AI STT (Pulse) + TTS (Waves) over /ws
    └─ Dispatch = real Twilio <Gather>/<Say> call driven by a Continuum LLM persona
    │  calls ▼ (MCP / StreamableHTTP)
-Fleet MCP server (FastMCP) — 14 tools over 9 scoring engines          :8765
+Fleet MCP server (FastMCP) — 15 tools over 9 scoring engines          :8765
 Redis — Continuum session store                                      :6380
 ```
 - **Continuum** is vendored at `continuum-src/` (install editable; imported as `orchestrator`). Examples in `continuum-src/playground/`.
@@ -45,7 +45,7 @@ backend/
   data/driver_session.py   # driver-portal state (loads, messages, HOS, action items)
   data/live_fleet.py       # live-map GPS simulation
   scoring/                 # 9 pure-function engines (camelCase dict contracts)
-  mcp_server/fleet_tools.py# FastMCP server — 14 tools (names MATCH the frontend renderer)
+  mcp_server/fleet_tools.py# FastMCP server — 15 tools (names MATCH the frontend renderer)
   agent/{prompts,tasha}.py # Tasha BaseAgent, per-request MCP session, SSE adapter, Continuum sessions
   missions/{store,runner}.py# 5 autonomous mission pipelines + registry
   voice/{stt,tts,session,twilio_dispatch}.py  # Smallest AI STT/TTS, /ws handler, real Twilio call
